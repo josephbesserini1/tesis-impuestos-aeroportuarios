@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'screens/admin/login_admin_screen.dart';
 import 'screens/consulta_screen.dart';
 import 'theme/app_theme.dart';
 
@@ -75,6 +76,19 @@ class HomePage extends StatelessWidget {
                   },
                   icon: const Icon(Icons.search),
                   label: const Text('Consultar impuestos'),
+                ),
+              ),
+              const SizedBox(height: 12),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 360),
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(builder: (_) => const LoginAdminScreen()),
+                    );
+                  },
+                  icon: const Icon(Icons.admin_panel_settings_outlined),
+                  label: const Text('Acceso administrativo'),
                 ),
               ),
             ],

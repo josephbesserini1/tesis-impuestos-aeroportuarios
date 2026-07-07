@@ -22,12 +22,14 @@ class AppTheme {
       scaffoldBackgroundColor: AppColors.background,
       colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
       appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppColors.primary,
+        foregroundColor: Colors.white,
         elevation: 0,
         centerTitle: false,
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
         titleTextStyle: TextStyle(
-          color: Colors.black87,
+          color: Colors.white,
           fontSize: 20,
           fontWeight: FontWeight.bold,
         ),
