@@ -69,6 +69,19 @@ class ComprobanteScreen extends StatelessWidget {
                               Text(fechaTexto, style: const TextStyle(fontWeight: FontWeight.w600)),
                             ],
                           ),
+                          const SizedBox(height: 12),
+                          const Row(
+                            children: [
+                              Icon(Icons.cloud_done_outlined, color: AppColors.success, size: 20),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Pago, referencia y comprobante registrados en Supabase',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

@@ -44,7 +44,10 @@ class _ConsultaScreenState extends State<ConsultaScreen> {
     try {
       final aeronaveData = await _supabase
           .from('aeronaves')
-          .select('id, matricula, tipo_aeronave, modelo, hangar_asignado, propietarios(nombre)')
+          .select(
+            'id, matricula, tipo_aeronave, modelo, fabricante, capacidad, estado, '
+            'hangar_asignado, propietarios(nombre), aeropuertos(nombre, codigo)',
+          )
           .eq('matricula', matricula)
           .maybeSingle();
 
@@ -189,8 +192,36 @@ class _ConsultaScreenState extends State<ConsultaScreen> {
                 ),
                 const Divider(height: 28),
                 if (aeronave.modelo != null) _buildInfoRow(Icons.directions_car_filled_outlined, 'Modelo', aeronave.modelo!),
+                if (aeronave.fabricante != null) _buildInfoRow(Icons.precision_manufacturing_outlined, 'Fabricante', aeronave.fabricante!),
+                if (aeronave.capacidad != null) _buildInfoRow(Icons.event_seat_outlined, 'Capacidad', '${aeronave.capacidad} puestos'),
                 if (aeronave.propietarioNombre != null) _buildInfoRow(Icons.person_outline, 'Propietario', aeronave.propietarioNombre!),
+                if (aeronave.aeropuertoNombre != null)
+                  _buildInfoRow(
+                    Icons.local_airport_outlined,
+                    'Aeropuerto',
+                    '${aeronave.aeropuertoNombre}${aeronave.aeropuertoCodigo != null ? ' (${aeronave.aeropuertoCodigo})' : ''}',
+                  ),
                 if (aeronave.hangarAsignado != null) _buildInfoRow(Icons.warehouse_outlined, 'Hangar', aeronave.hangarAsignado!),
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Row(
+                    children: [
+                      Icon(Icons.cloud_done_outlined, color: AppColors.primary, size: 20),
+                      SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'Datos consultados desde Supabase',
+                          style: TextStyle(color: AppColors.primary, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
