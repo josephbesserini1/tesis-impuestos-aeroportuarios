@@ -3,9 +3,15 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/usuario_admin.dart';
 import '../../theme/app_theme.dart';
+import 'aeropuertos_screen.dart';
 import 'aeronaves_screen.dart';
+import 'asignaciones_hangar_screen.dart';
+import 'auditoria_screen.dart';
+import 'catalogos_screen.dart';
+import 'hangares_screen.dart';
 import 'liquidaciones_screen.dart';
 import 'operaciones_screen.dart';
+import 'pagos_screen.dart';
 import 'propietarios_screen.dart';
 
 class AdminHomeScreen extends StatelessWidget {
@@ -50,41 +56,88 @@ class AdminHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 28),
             Expanded(
-              child: GridView.count(
-                crossAxisCount: 2,
-                mainAxisSpacing: 16,
-                crossAxisSpacing: 16,
-                childAspectRatio: 1.1,
-                children: [
-                  _AdminActionCard(
-                    icon: Icons.person_outline,
-                    label: 'Propietarios',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const PropietariosScreen()),
-                    ),
-                  ),
-                  _AdminActionCard(
-                    icon: Icons.flight,
-                    label: 'Aeronaves',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const AeronavesScreen()),
-                    ),
-                  ),
-                  _AdminActionCard(
-                    icon: Icons.flight_takeoff,
-                    label: 'Operaciones',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const OperacionesScreen()),
-                    ),
-                  ),
-                  _AdminActionCard(
-                    icon: Icons.receipt_long,
-                    label: 'Liquidaciones',
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => const LiquidacionesScreen()),
-                    ),
-                  ),
-                ],
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final columnas = constraints.maxWidth >= 760 ? 4 : 2;
+                  return GridView.count(
+                    crossAxisCount: columnas,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: columnas == 4 ? 1.25 : 1.1,
+                    children: [
+                      _AdminActionCard(
+                        icon: Icons.person_outline,
+                        label: 'Propietarios',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PropietariosScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.flight,
+                        label: 'Aeronaves',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AeronavesScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.local_airport_outlined,
+                        label: 'Aeropuertos',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AeropuertosScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.warehouse_outlined,
+                        label: 'Hangares',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const HangaresScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.assignment_turned_in_outlined,
+                        label: 'Asignaciones',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AsignacionesHangarScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.flight_takeoff,
+                        label: 'Operaciones',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const OperacionesScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.receipt_long,
+                        label: 'Liquidaciones',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const LiquidacionesScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.category_outlined,
+                        label: 'Catalogos',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const CatalogosScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.payments_outlined,
+                        label: 'Pagos',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const PagosScreen()),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.manage_search_outlined,
+                        label: 'Auditoria',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => const AuditoriaScreen()),
+                        ),
+                      ),
+                    ],
+                  );
+                },
               ),
             ),
           ],
