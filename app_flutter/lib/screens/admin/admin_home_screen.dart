@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/usuario_admin.dart';
 import '../../theme/app_theme.dart';
+import '../help_screen.dart';
 import 'aeropuertos_screen.dart';
 import 'aeronaves_screen.dart';
 import 'asignaciones_hangar_screen.dart';
@@ -89,6 +90,15 @@ class AdminHomeScreen extends StatelessWidget {
                         onTap: () => Navigator.of(context).push(
                           MaterialPageRoute(
                             builder: (_) => const AeronavesScreen(),
+                          ),
+                        ),
+                      ),
+                      _AdminActionCard(
+                        icon: Icons.help_outline,
+                        label: 'Ayuda y soporte',
+                        onTap: () => Navigator.of(context).push(
+                          MaterialPageRoute(
+                            builder: (_) => const HelpScreen(),
                           ),
                         ),
                       ),
