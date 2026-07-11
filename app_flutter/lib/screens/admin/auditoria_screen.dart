@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../theme/app_theme.dart';
+import 'admin_detail_sheet.dart';
 
 class AuditoriaScreen extends StatefulWidget {
   const AuditoriaScreen({super.key});
@@ -53,6 +54,41 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
     return '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year} ${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
   }
 
+  void _mostrarDetalle(Map<String, dynamic> evento) {
+    showAdminDetailSheet(
+      context: context,
+      title: '${evento['entidad']} - ${evento['accion']}',
+      icon: Icons.manage_search_outlined,
+      rows: [
+        AdminDetailRow(
+          label: 'Entidad',
+          value: evento['entidad'] as String?,
+          icon: Icons.table_chart_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Accion',
+          value: evento['accion'] as String?,
+          icon: Icons.bolt_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Descripcion',
+          value: evento['descripcion'] as String?,
+          icon: Icons.notes_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Fecha',
+          value: _fechaCorta(evento['created_at'] as String?),
+          icon: Icons.event_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Datos',
+          value: evento['datos']?.toString(),
+          icon: Icons.data_object,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -60,35 +96,50 @@ class _AuditoriaScreenState extends State<AuditoriaScreen> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _eventos.isEmpty
-                  ? const Center(child: Text('No hay eventos de auditoria registrados.'))
-                  : RefreshIndicator(
-                      onRefresh: _cargar,
-                      child: ListView.builder(
-                        padding: const EdgeInsets.all(20),
-                        itemCount: _eventos.length,
-                        itemBuilder: (context, index) {
-                          final evento = _eventos[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(bottom: 10),
-                            child: Card(
-                              child: ListTile(
-                                leading: const Icon(Icons.manage_search_outlined, color: AppColors.primary),
-                                title: Text(
-                                  '${evento['entidad']} - ${evento['accion']}',
-                                  style: const TextStyle(fontWeight: FontWeight.w600),
-                                ),
-                                subtitle: Text([
-                                  if (evento['descripcion'] != null) evento['descripcion'] as String,
-                                  _fechaCorta(evento['created_at'] as String?),
-                                ].where((text) => text.isNotEmpty).join(' - ')),
-                              ),
-                            ),
-                          );
-                        },
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            )
+          : _eventos.isEmpty
+          ? const Center(
+              child: Text('No hay eventos de auditoria registrados.'),
+            )
+          : RefreshIndicator(
+              onRefresh: _cargar,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(20),
+                itemCount: _eventos.length,
+                itemBuilder: (context, index) {
+                  final evento = _eventos[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 10),
+                    child: Card(
+                      child: ListTile(
+                        onTap: () => _mostrarDetalle(evento),
+                        leading: const Icon(
+                          Icons.manage_search_outlined,
+                          color: AppColors.primary,
+                        ),
+                        title: Text(
+                          '${evento['entidad']} - ${evento['accion']}',
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                        ),
+                        subtitle: Text(
+                          [
+                            if (evento['descripcion'] != null)
+                              evento['descripcion'] as String,
+                            _fechaCorta(evento['created_at'] as String?),
+                          ].where((text) => text.isNotEmpty).join(' - '),
+                        ),
+                        trailing: const Icon(
+                          Icons.chevron_right,
+                          color: Colors.grey,
+                        ),
                       ),
                     ),
+                  );
+                },
+              ),
+            ),
     );
   }
 }

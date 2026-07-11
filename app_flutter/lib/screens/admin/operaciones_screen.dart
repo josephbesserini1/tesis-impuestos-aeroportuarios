@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/aeronave.dart';
 import '../../models/operacion.dart';
 import '../../theme/app_theme.dart';
+import 'admin_detail_sheet.dart';
 
 class OperacionesScreen extends StatefulWidget {
   const OperacionesScreen({super.key});
@@ -32,7 +33,9 @@ class _OperacionesScreenState extends State<OperacionesScreen> {
     try {
       final data = await _supabase
           .from('operaciones')
-          .select('id, aeronave_id, tipo_operacion, fecha_operacion, piloto_responsable, aeronaves(matricula)')
+          .select(
+            'id, aeronave_id, tipo_operacion, fecha_operacion, piloto_responsable, aeronaves(matricula)',
+          )
           .order('fecha_operacion', ascending: false)
           .limit(50);
 
@@ -62,6 +65,44 @@ class _OperacionesScreenState extends State<OperacionesScreen> {
     if (creado == true) _cargar();
   }
 
+  String _fechaCompleta(DateTime fecha) {
+    return '${fecha.day.toString().padLeft(2, '0')}/${fecha.month.toString().padLeft(2, '0')}/${fecha.year} '
+        '${fecha.hour.toString().padLeft(2, '0')}:${fecha.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _mostrarDetalle(Operacion o) {
+    final esLlegada = o.tipoOperacion == 'llegada';
+    showAdminDetailSheet(
+      context: context,
+      title: o.matricula,
+      icon: esLlegada ? Icons.flight_land : Icons.flight_takeoff,
+      statusLabel: esLlegada ? 'Llegada' : 'Salida',
+      statusColor: AppColors.primary,
+      rows: [
+        AdminDetailRow(
+          label: 'Tipo de operacion',
+          value: esLlegada ? 'Llegada' : 'Salida',
+          icon: Icons.compare_arrows,
+        ),
+        AdminDetailRow(
+          label: 'Fecha',
+          value: _fechaCompleta(o.fechaOperacion),
+          icon: Icons.event_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Piloto responsable',
+          value: o.pilotoResponsable,
+          icon: Icons.person_outline,
+        ),
+        AdminDetailRow(
+          label: 'ID de aeronave',
+          value: o.aeronaveId,
+          icon: Icons.tag,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -74,33 +115,43 @@ class _OperacionesScreenState extends State<OperacionesScreen> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _operaciones.isEmpty
-                  ? const Center(child: Text('No hay operaciones registradas.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: _operaciones.length,
-                      itemBuilder: (context, index) {
-                        final o = _operaciones[index];
-                        final esLlegada = o.tipoOperacion == 'llegada';
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Card(
-                            child: ListTile(
-                              leading: Icon(
-                                esLlegada ? Icons.flight_land : Icons.flight_takeoff,
-                                color: AppColors.primary,
-                              ),
-                              title: Text(o.matricula, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text(
-                                '${esLlegada ? 'Llegada' : 'Salida'} · ${o.fechaOperacion.day.toString().padLeft(2, '0')}/${o.fechaOperacion.month.toString().padLeft(2, '0')}/${o.fechaOperacion.year}'
-                                '${o.pilotoResponsable != null ? ' · ${o.pilotoResponsable}' : ''}',
-                              ),
-                            ),
-                          ),
-                        );
-                      },
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            )
+          : _operaciones.isEmpty
+          ? const Center(child: Text('No hay operaciones registradas.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _operaciones.length,
+              itemBuilder: (context, index) {
+                final o = _operaciones[index];
+                final esLlegada = o.tipoOperacion == 'llegada';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    child: ListTile(
+                      onTap: () => _mostrarDetalle(o),
+                      leading: Icon(
+                        esLlegada ? Icons.flight_land : Icons.flight_takeoff,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(
+                        o.matricula,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${esLlegada ? 'Llegada' : 'Salida'} · ${o.fechaOperacion.day.toString().padLeft(2, '0')}/${o.fechaOperacion.month.toString().padLeft(2, '0')}/${o.fechaOperacion.year}'
+                        '${o.pilotoResponsable != null ? ' · ${o.pilotoResponsable}' : ''}',
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                      ),
                     ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -131,7 +182,10 @@ class _FormularioOperacionState extends State<_FormularioOperacion> {
 
   Future<void> _cargarAeronaves() async {
     try {
-      final data = await _supabase.from('aeronaves').select('id, matricula').order('matricula');
+      final data = await _supabase
+          .from('aeronaves')
+          .select('id, matricula')
+          .order('matricula');
 
       setState(() {
         _aeronaves = (data as List)
@@ -168,7 +222,9 @@ class _FormularioOperacionState extends State<_FormularioOperacion> {
       await _supabase.from('operaciones').insert({
         'aeronave_id': _aeronaveSeleccionadaId,
         'tipo_operacion': _tipoOperacion,
-        'piloto_responsable': _pilotoController.text.trim().isEmpty ? null : _pilotoController.text.trim(),
+        'piloto_responsable': _pilotoController.text.trim().isEmpty
+            ? null
+            : _pilotoController.text.trim(),
       });
 
       if (!mounted) return;
@@ -194,7 +250,12 @@ class _FormularioOperacionState extends State<_FormularioOperacion> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Registrar operación', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Registrar operación',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
           _cargandoAeronaves
               ? const Center(child: CircularProgressIndicator())
@@ -202,23 +263,40 @@ class _FormularioOperacionState extends State<_FormularioOperacion> {
                   initialValue: _aeronaveSeleccionadaId,
                   decoration: const InputDecoration(labelText: 'Aeronave'),
                   items: _aeronaves
-                      .map((a) => DropdownMenuItem(value: a.id, child: Text(a.matricula)))
+                      .map(
+                        (a) => DropdownMenuItem(
+                          value: a.id,
+                          child: Text(a.matricula),
+                        ),
+                      )
                       .toList(),
-                  onChanged: (value) => setState(() => _aeronaveSeleccionadaId = value),
+                  onChanged: (value) =>
+                      setState(() => _aeronaveSeleccionadaId = value),
                 ),
           const SizedBox(height: 12),
           SegmentedButton<String>(
             segments: const [
-              ButtonSegment(value: 'llegada', label: Text('Llegada'), icon: Icon(Icons.flight_land)),
-              ButtonSegment(value: 'salida', label: Text('Salida'), icon: Icon(Icons.flight_takeoff)),
+              ButtonSegment(
+                value: 'llegada',
+                label: Text('Llegada'),
+                icon: Icon(Icons.flight_land),
+              ),
+              ButtonSegment(
+                value: 'salida',
+                label: Text('Salida'),
+                icon: Icon(Icons.flight_takeoff),
+              ),
             ],
             selected: {_tipoOperacion},
-            onSelectionChanged: (seleccion) => setState(() => _tipoOperacion = seleccion.first),
+            onSelectionChanged: (seleccion) =>
+                setState(() => _tipoOperacion = seleccion.first),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _pilotoController,
-            decoration: const InputDecoration(labelText: 'Piloto responsable (opcional)'),
+            decoration: const InputDecoration(
+              labelText: 'Piloto responsable (opcional)',
+            ),
           ),
           if (_error != null) ...[
             const SizedBox(height: 12),
@@ -231,7 +309,10 @@ class _FormularioOperacionState extends State<_FormularioOperacion> {
                 ? const SizedBox(
                     height: 18,
                     width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Guardar'),
           ),

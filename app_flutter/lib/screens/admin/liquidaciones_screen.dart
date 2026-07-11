@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/operacion.dart';
 import '../../models/tipo_impuesto.dart';
 import '../../theme/app_theme.dart';
+import 'admin_detail_sheet.dart';
 
 class _LiquidacionAdmin {
   final String id;
@@ -12,6 +13,7 @@ class _LiquidacionAdmin {
   final String tipoImpuestoNombre;
   final double monto;
   final String estado;
+  final String? fechaLiquidacion;
 
   _LiquidacionAdmin({
     required this.id,
@@ -20,6 +22,7 @@ class _LiquidacionAdmin {
     required this.tipoImpuestoNombre,
     required this.monto,
     required this.estado,
+    this.fechaLiquidacion,
   });
 
   factory _LiquidacionAdmin.fromMap(Map<String, dynamic> map) {
@@ -33,6 +36,7 @@ class _LiquidacionAdmin {
       tipoImpuestoNombre: tipoImpuesto?['nombre'] as String? ?? '',
       monto: (map['monto'] as num).toDouble(),
       estado: map['estado'] as String,
+      fechaLiquidacion: map['fecha_liquidacion'] as String?,
     );
   }
 }
@@ -97,6 +101,51 @@ class _LiquidacionesScreenState extends State<LiquidacionesScreen> {
     if (creado == true) _cargar();
   }
 
+  Color _estadoColor(String estado) {
+    if (estado == 'pendiente') return AppColors.warning;
+    if (estado == 'pagado') return AppColors.success;
+    return Colors.grey;
+  }
+
+  void _mostrarDetalle(_LiquidacionAdmin l) {
+    showAdminDetailSheet(
+      context: context,
+      title: '${l.matricula} - ${l.tipoImpuestoNombre}',
+      icon: Icons.receipt_long,
+      statusLabel: l.estado == 'pendiente'
+          ? 'Pendiente'
+          : (l.estado == 'pagado' ? 'Pagado' : 'Anulado'),
+      statusColor: _estadoColor(l.estado),
+      rows: [
+        AdminDetailRow(
+          label: 'Aeronave',
+          value: l.matricula,
+          icon: Icons.flight,
+        ),
+        AdminDetailRow(
+          label: 'Operacion',
+          value: l.tipoOperacion,
+          icon: Icons.compare_arrows,
+        ),
+        AdminDetailRow(
+          label: 'Impuesto',
+          value: l.tipoImpuestoNombre,
+          icon: Icons.receipt_long,
+        ),
+        AdminDetailRow(
+          label: 'Monto',
+          value: 'Bs. ${l.monto.toStringAsFixed(2)}',
+          icon: Icons.payments_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Fecha',
+          value: l.fechaLiquidacion,
+          icon: Icons.event_outlined,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,32 +158,54 @@ class _LiquidacionesScreenState extends State<LiquidacionesScreen> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _liquidaciones.isEmpty
-                  ? const Center(child: Text('No hay liquidaciones registradas.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: _liquidaciones.length,
-                      itemBuilder: (context, index) {
-                        final l = _liquidaciones[index];
-                        final pendiente = l.estado == 'pendiente';
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.receipt_long, color: AppColors.primary),
-                              title: Text('${l.matricula} · ${l.tipoImpuestoNombre}', style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text('Bs. ${l.monto.toStringAsFixed(2)}'),
-                              trailing: AppStatusChip(
-                                label: pendiente ? 'Pendiente' : (l.estado == 'pagado' ? 'Pagado' : 'Anulado'),
-                                color: pendiente ? AppColors.warning : AppColors.success,
-                                backgroundColor: pendiente ? AppColors.warningBg : AppColors.successBg,
-                              ),
-                            ),
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            )
+          : _liquidaciones.isEmpty
+          ? const Center(child: Text('No hay liquidaciones registradas.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _liquidaciones.length,
+              itemBuilder: (context, index) {
+                final l = _liquidaciones[index];
+                final pendiente = l.estado == 'pendiente';
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    child: ListTile(
+                      onTap: () => _mostrarDetalle(l),
+                      leading: const Icon(
+                        Icons.receipt_long,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(
+                        '${l.matricula} · ${l.tipoImpuestoNombre}',
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text('Bs. ${l.monto.toStringAsFixed(2)}'),
+                      trailing: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          AppStatusChip(
+                            label: pendiente
+                                ? 'Pendiente'
+                                : (l.estado == 'pagado' ? 'Pagado' : 'Anulado'),
+                            color: pendiente
+                                ? AppColors.warning
+                                : AppColors.success,
+                            backgroundColor: pendiente
+                                ? AppColors.warningBg
+                                : AppColors.successBg,
                           ),
-                        );
-                      },
+                          const SizedBox(width: 8),
+                          const Icon(Icons.chevron_right, color: Colors.grey),
+                        ],
+                      ),
                     ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -167,7 +238,9 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
     try {
       final operacionesData = await _supabase
           .from('operaciones')
-          .select('id, aeronave_id, tipo_operacion, fecha_operacion, piloto_responsable, aeronaves(matricula)')
+          .select(
+            'id, aeronave_id, tipo_operacion, fecha_operacion, piloto_responsable, aeronaves(matricula)',
+          )
           .order('fecha_operacion', ascending: false)
           .limit(50);
 
@@ -202,7 +275,8 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
   }
 
   Future<void> _guardar() async {
-    if (_operacionSeleccionadaId == null || _tipoImpuestoSeleccionadoId == null) {
+    if (_operacionSeleccionadaId == null ||
+        _tipoImpuestoSeleccionadoId == null) {
       setState(() => _error = 'Selecciona la operación y el tipo de impuesto.');
       return;
     }
@@ -243,7 +317,12 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Generar liquidación', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+          Text(
+            'Generar liquidación',
+            style: Theme.of(
+              context,
+            ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+          ),
           const SizedBox(height: 16),
           _cargandoOpciones
               ? const Center(child: CircularProgressIndicator())
@@ -255,33 +334,46 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
                       decoration: const InputDecoration(labelText: 'Operación'),
                       isExpanded: true,
                       items: _operaciones
-                          .map((o) => DropdownMenuItem(
-                                value: o.id,
-                                child: Text(
-                                  '${o.matricula} · ${o.tipoOperacion} · '
-                                  '${o.fechaOperacion.day.toString().padLeft(2, '0')}/${o.fechaOperacion.month.toString().padLeft(2, '0')}',
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.id,
+                              child: Text(
+                                '${o.matricula} · ${o.tipoOperacion} · '
+                                '${o.fechaOperacion.day.toString().padLeft(2, '0')}/${o.fechaOperacion.month.toString().padLeft(2, '0')}',
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (value) => setState(() => _operacionSeleccionadaId = value),
+                      onChanged: (value) =>
+                          setState(() => _operacionSeleccionadaId = value),
                     ),
                     const SizedBox(height: 12),
                     DropdownButtonFormField<String>(
                       initialValue: _tipoImpuestoSeleccionadoId,
-                      decoration: const InputDecoration(labelText: 'Tipo de impuesto'),
+                      decoration: const InputDecoration(
+                        labelText: 'Tipo de impuesto',
+                      ),
                       items: _tiposImpuesto
-                          .map((t) => DropdownMenuItem(
-                                value: t.id,
-                                child: Text('${t.nombre} (Bs. ${t.montoBase.toStringAsFixed(2)})'),
-                              ))
+                          .map(
+                            (t) => DropdownMenuItem(
+                              value: t.id,
+                              child: Text(
+                                '${t.nombre} (Bs. ${t.montoBase.toStringAsFixed(2)})',
+                              ),
+                            ),
+                          )
                           .toList(),
-                      onChanged: (value) => setState(() => _tipoImpuestoSeleccionadoId = value),
+                      onChanged: (value) =>
+                          setState(() => _tipoImpuestoSeleccionadoId = value),
                     ),
                     if (_montoSeleccionado != null) ...[
                       const SizedBox(height: 12),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16,
+                          vertical: 14,
+                        ),
                         decoration: BoxDecoration(
                           color: AppColors.primary.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(14),
@@ -292,7 +384,9 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
                             const Text('Monto a liquidar'),
                             Text(
                               'Bs. ${_montoSeleccionado!.toStringAsFixed(2)}',
-                              style: const TextStyle(fontWeight: FontWeight.bold),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ],
                         ),
@@ -311,7 +405,10 @@ class _FormularioLiquidacionState extends State<_FormularioLiquidacion> {
                 ? const SizedBox(
                     height: 18,
                     width: 18,
-                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
                   )
                 : const Text('Guardar'),
           ),

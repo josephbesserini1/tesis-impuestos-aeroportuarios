@@ -19,6 +19,15 @@ class AdminHomeScreen extends StatelessWidget {
 
   const AdminHomeScreen({super.key, required this.usuarioAdmin});
 
+  String get _nombreVisible {
+    final partes = usuarioAdmin.nombre.trim().split(RegExp(r'\s+'));
+    final nombre = partes.isEmpty || partes.first.isEmpty
+        ? usuarioAdmin.nombre
+        : partes.first;
+    if (nombre.isEmpty) return nombre;
+    return nombre[0].toUpperCase() + nombre.substring(1).toLowerCase();
+  }
+
   Future<void> _cerrarSesion(BuildContext context) async {
     await Supabase.instance.client.auth.signOut();
     if (!context.mounted) return;
@@ -44,7 +53,7 @@ class AdminHomeScreen extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Hola, ${usuarioAdmin.nombre}',
+              'Hola, $_nombreVisible 👋',
               style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
@@ -69,70 +78,90 @@ class AdminHomeScreen extends StatelessWidget {
                         icon: Icons.person_outline,
                         label: 'Propietarios',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const PropietariosScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const PropietariosScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.flight,
                         label: 'Aeronaves',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AeronavesScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AeronavesScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.local_airport_outlined,
                         label: 'Aeropuertos',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AeropuertosScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AeropuertosScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.warehouse_outlined,
                         label: 'Hangares',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const HangaresScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const HangaresScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.assignment_turned_in_outlined,
                         label: 'Asignaciones',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AsignacionesHangarScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AsignacionesHangarScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.flight_takeoff,
                         label: 'Operaciones',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const OperacionesScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const OperacionesScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.receipt_long,
                         label: 'Liquidaciones',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const LiquidacionesScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const LiquidacionesScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.category_outlined,
                         label: 'Catalogos',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const CatalogosScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const CatalogosScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.payments_outlined,
                         label: 'Pagos',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const PagosScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const PagosScreen(),
+                          ),
                         ),
                       ),
                       _AdminActionCard(
                         icon: Icons.manage_search_outlined,
                         label: 'Auditoria',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => const AuditoriaScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const AuditoriaScreen(),
+                          ),
                         ),
                       ),
                     ],
@@ -152,7 +181,11 @@ class _AdminActionCard extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
 
-  const _AdminActionCard({required this.icon, required this.label, required this.onTap});
+  const _AdminActionCard({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {

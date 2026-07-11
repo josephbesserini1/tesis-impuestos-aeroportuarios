@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../models/propietario.dart';
 import '../../theme/app_theme.dart';
+import 'admin_detail_sheet.dart';
 
 class PropietariosScreen extends StatefulWidget {
   const PropietariosScreen({super.key});
@@ -60,6 +61,31 @@ class _PropietariosScreenState extends State<PropietariosScreen> {
     if (creado == true) _cargar();
   }
 
+  void _mostrarDetalle(Propietario p) {
+    showAdminDetailSheet(
+      context: context,
+      title: p.nombre,
+      icon: Icons.person_outline,
+      rows: [
+        AdminDetailRow(
+          label: 'Cedula/RIF',
+          value: p.cedulaRif,
+          icon: Icons.badge_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Telefono',
+          value: p.telefono,
+          icon: Icons.phone_outlined,
+        ),
+        AdminDetailRow(
+          label: 'Email',
+          value: p.email,
+          icon: Icons.email_outlined,
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -72,26 +98,41 @@ class _PropietariosScreenState extends State<PropietariosScreen> {
       body: _cargando
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(child: Text(_error!, style: const TextStyle(color: Colors.red)))
-              : _propietarios.isEmpty
-                  ? const Center(child: Text('No hay propietarios registrados.'))
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(20),
-                      itemCount: _propietarios.length,
-                      itemBuilder: (context, index) {
-                        final p = _propietarios[index];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
-                          child: Card(
-                            child: ListTile(
-                              leading: const Icon(Icons.person_outline, color: AppColors.primary),
-                              title: Text(p.nombre, style: const TextStyle(fontWeight: FontWeight.w600)),
-                              subtitle: Text('${p.cedulaRif}${p.telefono != null ? ' · ${p.telefono}' : ''}'),
-                            ),
-                          ),
-                        );
-                      },
+          ? Center(
+              child: Text(_error!, style: const TextStyle(color: Colors.red)),
+            )
+          : _propietarios.isEmpty
+          ? const Center(child: Text('No hay propietarios registrados.'))
+          : ListView.builder(
+              padding: const EdgeInsets.all(20),
+              itemCount: _propietarios.length,
+              itemBuilder: (context, index) {
+                final p = _propietarios[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Card(
+                    child: ListTile(
+                      onTap: () => _mostrarDetalle(p),
+                      leading: const Icon(
+                        Icons.person_outline,
+                        color: AppColors.primary,
+                      ),
+                      title: Text(
+                        p.nombre,
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                      ),
+                      subtitle: Text(
+                        '${p.cedulaRif}${p.telefono != null ? ' · ${p.telefono}' : ''}',
+                      ),
+                      trailing: const Icon(
+                        Icons.chevron_right,
+                        color: Colors.grey,
+                      ),
                     ),
+                  ),
+                );
+              },
+            ),
     );
   }
 }
@@ -134,15 +175,20 @@ class _FormularioPropietarioState extends State<_FormularioPropietario> {
       await _supabase.from('propietarios').insert({
         'nombre': _nombreController.text.trim(),
         'cedula_rif': _cedulaController.text.trim(),
-        'telefono': _telefonoController.text.trim().isEmpty ? null : _telefonoController.text.trim(),
-        'email': _emailController.text.trim().isEmpty ? null : _emailController.text.trim(),
+        'telefono': _telefonoController.text.trim().isEmpty
+            ? null
+            : _telefonoController.text.trim(),
+        'email': _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim(),
       });
 
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (e) {
       setState(() {
-        _error = 'No se pudo registrar. Verifica que la cédula/RIF no esté duplicada.';
+        _error =
+            'No se pudo registrar. Verifica que la cédula/RIF no esté duplicada.';
         _guardando = false;
       });
     }
@@ -163,23 +209,37 @@ class _FormularioPropietarioState extends State<_FormularioPropietario> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text('Registrar propietario', style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold)),
+            Text(
+              'Registrar propietario',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
             const SizedBox(height: 16),
             TextFormField(
               controller: _nombreController,
-              decoration: const InputDecoration(labelText: 'Nombre completo o razón social'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+              decoration: const InputDecoration(
+                labelText: 'Nombre completo o razón social',
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Requerido' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _cedulaController,
-              decoration: const InputDecoration(labelText: 'Cédula o RIF', hintText: 'Ej: V-12345678'),
-              validator: (v) => (v == null || v.trim().isEmpty) ? 'Requerido' : null,
+              decoration: const InputDecoration(
+                labelText: 'Cédula o RIF',
+                hintText: 'Ej: V-12345678',
+              ),
+              validator: (v) =>
+                  (v == null || v.trim().isEmpty) ? 'Requerido' : null,
             ),
             const SizedBox(height: 12),
             TextFormField(
               controller: _telefonoController,
-              decoration: const InputDecoration(labelText: 'Teléfono (opcional)'),
+              decoration: const InputDecoration(
+                labelText: 'Teléfono (opcional)',
+              ),
             ),
             const SizedBox(height: 12),
             TextFormField(
@@ -197,7 +257,10 @@ class _FormularioPropietarioState extends State<_FormularioPropietario> {
                   ? const SizedBox(
                       height: 18,
                       width: 18,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
                     )
                   : const Text('Guardar'),
             ),
