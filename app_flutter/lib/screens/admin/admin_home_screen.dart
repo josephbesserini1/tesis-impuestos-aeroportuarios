@@ -15,24 +15,50 @@ import 'operaciones_screen.dart';
 import 'pagos_screen.dart';
 import 'propietarios_screen.dart';
 
-class AdminHomeScreen extends StatelessWidget {
-  final UsuarioAdmin usuarioAdmin;
+typedef AdminSignOut = Future<void> Function();
 
-  const AdminHomeScreen({super.key, required this.usuarioAdmin});
+class AdminHomeScreen extends StatefulWidget {
+  final UsuarioAdmin usuarioAdmin;
+  final AdminSignOut? signOut;
+
+  const AdminHomeScreen({super.key, required this.usuarioAdmin, this.signOut});
+
+  @override
+  State<AdminHomeScreen> createState() => _AdminHomeScreenState();
+}
+
+class _AdminHomeScreenState extends State<AdminHomeScreen> {
+  bool _cerrandoSesion = false;
 
   String get _nombreVisible {
-    final partes = usuarioAdmin.nombre.trim().split(RegExp(r'\s+'));
+    final partes = widget.usuarioAdmin.nombre.trim().split(RegExp(r'\s+'));
     final nombre = partes.isEmpty || partes.first.isEmpty
-        ? usuarioAdmin.nombre
+        ? widget.usuarioAdmin.nombre
         : partes.first;
     if (nombre.isEmpty) return nombre;
     return nombre[0].toUpperCase() + nombre.substring(1).toLowerCase();
   }
 
-  Future<void> _cerrarSesion(BuildContext context) async {
-    await Supabase.instance.client.auth.signOut();
-    if (!context.mounted) return;
-    Navigator.of(context).popUntil((route) => route.isFirst);
+  Future<void> _cerrarSesion() async {
+    if (_cerrandoSesion) return;
+    setState(() => _cerrandoSesion = true);
+
+    try {
+      final signOut = widget.signOut;
+      if (signOut != null) {
+        await signOut().timeout(const Duration(seconds: 8));
+      } else {
+        await Supabase.instance.client.auth
+            .signOut(scope: SignOutScope.local)
+            .timeout(const Duration(seconds: 8));
+      }
+    } catch (_) {
+      // Supabase elimina primero la sesión local. Aunque falle la petición
+      // remota o se agote el tiempo, el usuario debe salir del panel.
+    }
+
+    if (!mounted) return;
+    Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
   }
 
   @override
@@ -42,9 +68,18 @@ class AdminHomeScreen extends StatelessWidget {
         title: const Text('Panel administrativo'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout),
+            icon: _cerrandoSesion
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                : const Icon(Icons.logout),
             tooltip: 'Cerrar sesión',
-            onPressed: () => _cerrarSesion(context),
+            onPressed: _cerrandoSesion ? null : _cerrarSesion,
           ),
         ],
       ),
@@ -59,7 +94,7 @@ class AdminHomeScreen extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             AppStatusChip(
-              label: usuarioAdmin.rol,
+              label: widget.usuarioAdmin.rol,
               color: AppColors.primary,
               backgroundColor: AppColors.primary.withValues(alpha: 0.1),
               icon: Icons.badge_outlined,
@@ -97,9 +132,7 @@ class AdminHomeScreen extends StatelessWidget {
                         icon: Icons.help_outline,
                         label: 'Ayuda y soporte',
                         onTap: () => Navigator.of(context).push(
-                          MaterialPageRoute(
-                            builder: (_) => const HelpScreen(),
-                          ),
+                          MaterialPageRoute(builder: (_) => const HelpScreen()),
                         ),
                       ),
                       _AdminActionCard(
