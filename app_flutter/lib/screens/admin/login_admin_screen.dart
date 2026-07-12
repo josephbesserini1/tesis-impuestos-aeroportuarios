@@ -4,16 +4,20 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../models/usuario_admin.dart';
 import '../../theme/app_theme.dart';
 import 'admin_home_screen.dart';
+import 'forgot_password_screen.dart';
 
 class LoginAdminScreen extends StatefulWidget {
-  const LoginAdminScreen({super.key});
+  final String? initialMessage;
+
+  const LoginAdminScreen({super.key, this.initialMessage});
 
   @override
   State<LoginAdminScreen> createState() => _LoginAdminScreenState();
 }
 
 class _LoginAdminScreenState extends State<LoginAdminScreen> {
-  final _supabase = Supabase.instance.client;
+  SupabaseClient get _supabase => Supabase.instance.client;
+
   final _nombreController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -24,6 +28,12 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
   bool _modoRegistro = false;
   String? _error;
   String? _mensaje;
+
+  @override
+  void initState() {
+    super.initState();
+    _mensaje = widget.initialMessage;
+  }
 
   @override
   void dispose() {
@@ -210,6 +220,16 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
     });
   }
 
+  void _abrirRecuperacionPassword() {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => ForgotPasswordScreen(
+          initialEmail: _emailController.text.trim(),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -319,6 +339,15 @@ class _LoginAdminScreenState extends State<LoginAdminScreen> {
                     ),
                   ),
                 ),
+                if (!_modoRegistro)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed:
+                          _cargando ? null : _abrirRecuperacionPassword,
+                      child: const Text('¿Olvidaste tu contraseña?'),
+                    ),
+                  ),
                 if (_modoRegistro) ...[
                   const SizedBox(height: 16),
                   TextField(

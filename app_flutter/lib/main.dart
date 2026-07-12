@@ -1,29 +1,119 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import 'screens/admin/login_admin_screen.dart';
+import 'screens/admin/update_password_screen.dart';
 import 'screens/consulta_screen.dart';
 import 'theme/app_theme.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  final initialPasswordRecovery = isPasswordRecoveryUri(Uri.base);
 
   await Supabase.initialize(
     url: 'https://ikcvhwtydiganghvftvi.supabase.co',
-    anonKey: 'sb_publishable_kyoVdqx22v4pmB1YNw1XTQ_og3alADa',
+    publishableKey: 'sb_publishable_kyoVdqx22v4pmB1YNw1XTQ_og3alADa',
+    authOptions: const FlutterAuthClientOptions(
+      authFlowType: AuthFlowType.implicit,
+    ),
   );
 
-  runApp(const MyApp());
+  runApp(
+    MyApp(
+      authStateChanges: supabase.auth.onAuthStateChange,
+      initialPasswordRecovery: initialPasswordRecovery,
+    ),
+  );
 }
 
 final supabase = Supabase.instance.client;
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+bool isPasswordRecoveryUri(Uri uri) {
+  if (uri.queryParameters['type'] == 'recovery') return true;
+  if (uri.fragment.isEmpty) return false;
+
+  try {
+    return Uri.splitQueryString(uri.fragment)['type'] == 'recovery';
+  } on FormatException {
+    return false;
+  }
+}
+
+class MyApp extends StatefulWidget {
+  final Stream<AuthState> authStateChanges;
+  final bool initialPasswordRecovery;
+
+  const MyApp({
+    super.key,
+    this.authStateChanges = const Stream<AuthState>.empty(),
+    this.initialPasswordRecovery = false,
+  });
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
+  final _navigatorKey = GlobalKey<NavigatorState>();
+  StreamSubscription<AuthState>? _authSubscription;
+  bool _recoveryScreenVisible = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _authSubscription = widget.authStateChanges.listen(
+      _handleAuthStateChange,
+      onError: (Object error, StackTrace stackTrace) {
+        debugPrint('Supabase Auth: $error\n$stackTrace');
+      },
+    );
+
+    if (widget.initialPasswordRecovery) {
+      _showPasswordRecovery();
+    }
+  }
+
+  @override
+  void dispose() {
+    _authSubscription?.cancel();
+    super.dispose();
+  }
+
+  void _handleAuthStateChange(AuthState state) {
+    if (state.event != AuthChangeEvent.passwordRecovery) return;
+    _showPasswordRecovery();
+  }
+
+  void _showPasswordRecovery() {
+    if (_recoveryScreenVisible) return;
+
+    _recoveryScreenVisible = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+
+      final navigator = _navigatorKey.currentState;
+      if (navigator == null) {
+        _recoveryScreenVisible = false;
+        return;
+      }
+
+      navigator.pushAndRemoveUntil(
+        MaterialPageRoute(
+          builder: (_) => UpdatePasswordScreen(
+            onCompleted: () => _recoveryScreenVisible = false,
+          ),
+        ),
+        (route) => false,
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      navigatorKey: _navigatorKey,
       title: 'Kiosco Impuestos Aeroportuarios',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,

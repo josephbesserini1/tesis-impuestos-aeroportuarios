@@ -8,8 +8,42 @@ impuestos aeroportuarios.
 ```powershell
 cd C:\Users\Joseph\Desktop\tesis-impuestos-aeroportuarios\app_flutter
 flutter pub get
-flutter run -d chrome
+flutter run -d chrome --web-port 49800
 ```
+
+Se usa un puerto fijo porque Supabase Auth necesita una URL estable para los
+enlaces de recuperacion de contrasena.
+
+## Recuperacion de contrasena en Supabase
+
+En el panel del proyecto de Supabase abre:
+
+```text
+Authentication > URL Configuration
+```
+
+Agrega esta URL en `Redirect URLs` para desarrollo:
+
+```text
+http://localhost:49800/
+```
+
+En `Authentication > Email Templates > Reset password`, conserva el enlace de
+confirmacion de Supabase. Si personalizas la plantilla, el boton debe usar:
+
+```html
+<a href="{{ .ConfirmationURL }}">Restablecer contrasena</a>
+```
+
+Cuando la app se publique, agrega tambien su direccion HTTPS exacta. El correo
+se solicita desde `¿Olvidaste tu contrasena?` en el acceso administrativo. El
+flujo web usa la respuesta implicita de Supabase y detecta `type=recovery` antes
+de que el SDK limpie los datos temporales de la URL.
+
+La nueva contrasena se guarda mediante Supabase Auth; no se almacena en
+`usuarios_admin` ni en ninguna tabla publica. Para produccion configura un SMTP
+propio en Supabase, ya que el servicio de correo incluido es solo para pruebas y
+tiene limites de envio.
 
 ## Preparar Supabase
 
