@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../app_config.dart';
 import '../../theme/app_theme.dart';
 
 typedef PasswordResetEmailSender =
@@ -46,7 +47,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     if (widget.recoveryRedirectTo != null) {
       return widget.recoveryRedirectTo;
     }
-    if (!kIsWeb) return null;
+    if (!kIsWeb) return mobileAuthCallbackUrl;
 
     final base = Uri.base;
     return Uri(
