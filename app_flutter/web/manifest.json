@@ -1,11 +1,11 @@
 {
-    "name": "app_flutter",
-    "short_name": "app_flutter",
+    "name": "Kiosco de Impuestos Aeroportuarios",
+    "short_name": "Impuestos Aeroportuarios",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#F8F9FA",
+    "theme_color": "#007BFF",
+    "description": "Consulta y paga impuestos aeroportuarios desde tu dispositivo.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
