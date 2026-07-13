@@ -155,6 +155,12 @@ class HomePage extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(fontSize: 14, color: Colors.grey),
               ),
+              const SizedBox(height: 8),
+              const Text(
+                'Prueba de actualización para iPhone',
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: 12, color: AppColors.primary),
+              ),
               const SizedBox(height: 40),
               ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: 360),
