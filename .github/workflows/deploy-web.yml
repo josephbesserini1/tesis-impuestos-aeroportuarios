@@ -2,7 +2,7 @@ name: Publicar aplicación web
 
 on:
   push:
-    branches: [main, develop]
+    branches: [develop]
     paths:
       - 'app_flutter/**'
       - '.github/workflows/deploy-web.yml'
